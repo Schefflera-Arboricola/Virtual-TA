@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Virtual TA</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <style>
+            .chatbot {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background-color: #f1f1f1;
+                border-radius: 5px;
+                padding: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="col-sm-12">
+            <h1 style="text-align: center;">Virtual TA</h1>
+            <br>
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-sm-8">
+                    <iframe width="100%" height="630" src="https://youtube.com/embed/PNKj529yY5c" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+                </div>
+                <div class="col-sm-4">
+                    <div class="chatbot">
+                        <h3>Ask doubts</h3>
+                        <iframe src="https://chat.openai.com/chat" frameborder="0" style="height: 700px; width: 100%;"></iframe>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script>
+            var video = document.createElement('video');
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            var imageCounter = 0;
+            var intervalId = setInterval(takePicture, 5000); // take picture every 5 seconds
+        
+            navigator.mediaDevices.getUserMedia({video: true}).then(function(stream) {
+                video.srcObject = stream;
+                video.play();
+            });
+        
+            function takePicture() {
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                var image = canvas.toDataURL('image/png');
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        console.log('Image saved.');
+                        // check if the learner is not interested
+                        var xhrCheck = new XMLHttpRequest();
+                        xhrCheck.onreadystatechange = function() {
+                            if (xhrCheck.readyState === 4 && xhrCheck.status === 200) {
+                                console.log(xhrCheck.responseText);
+                                if (xhrCheck.responseText === 'True') {
+                                    // display the error message
+                                    var errorDiv = document.getElementById('error-div');
+                                    errorDiv.style.display = 'block';
+                                }
+                            }
+                        }
+                        xhrCheck.open('GET', '/check-interest', true);
+                        xhrCheck.send();
+                    }
+                }
+                xhr.open('POST', '/save-image', true);
+                xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+                xhr.send('image=' + image);
+                imageCounter++;
+            }
+
+        </script> 
+
+        <div class="error" id="error-div" style="display:none">
+            <p>Are you clear with this topic? Do you have any doubts</p>
+        </div>
+        
+    </body>
+</html>
